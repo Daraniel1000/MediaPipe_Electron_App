@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/ 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src https://cdn.jsdelivr.net/">
+    <link href="./styles.css" rel="stylesheet">
+    <title>Hello World!</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic@0.5/holistic.js" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div class="container">
+        <canvas class="output_canvas"></canvas>
+        <video class="input_video"></video>
+      </div>
+
+    <!-- You can also require other files to run in this process -->
+    <script nodeIntegration src="./renderer.js"></script>
+  </body>
+</html>
