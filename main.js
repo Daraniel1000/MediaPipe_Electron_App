@@ -1,18 +1,18 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, globalShortcut } = require('electron')
 const path = require('path')
 
-function createWindow (height) {
+function createWindow (workAreaSize) {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 340,
-    height: 260,
-    x:0,
-    y:height - 260,
+    width: 660,
+    height: 500,
+    x:workAreaSize.width - 650,
+    y:workAreaSize.height - 480,
     alwaysOnTop: true,
-    focusable: true,
+    //focusable: false,
     frame: false,
-    skipTaskbar: true,
+    skipTaskbar: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       sandbox: false
@@ -30,13 +30,17 @@ function createWindow (height) {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  globalShortcut.register('shift+esc', () => {
+    app.quit();
+  })
+}).then(() => {
   const { screen } = require('electron');
-  createWindow(screen.getPrimaryDisplay().workAreaSize.height);
+  createWindow(screen.getPrimaryDisplay().workAreaSize);
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow(screen.getPrimaryDisplay().workAreaSize.height)
+    if (BrowserWindow.getAllWindows().length === 0) createWindow(screen.getPrimaryDisplay().workAreaSize)
   })
 })
 

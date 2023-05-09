@@ -1,6 +1,6 @@
 {
-  "name": "Holistic",
-  "productName": "Holistic",
+  "name": "HolisticWebcamElektron",
+  "productName": "HolisticWebcamElektron",
   "description": "My Electron application description",
   "keywords": [],
   "main": "./main.js",

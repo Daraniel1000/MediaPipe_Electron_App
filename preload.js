@@ -11,7 +11,7 @@ const { contextBridge } = require('electron');
 const { pack } = require('msgpackr');
 
 const client = dgram.createSocket('udp4');
-const sendBuffer = async (messageObj) => client.send(pack(messageObj), 8080, 'localhost', (err) => {
+const sendBuffer = async (messageObj) => client.send(pack(messageObj), 9000, 'localhost', (err) => {
   err && console.log(err);
 });
 contextBridge.exposeInMainWorld('dgram', {
