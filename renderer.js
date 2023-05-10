@@ -16,13 +16,13 @@ let prevTime = Date.now();
 let frames = 0;
 let timecounter = 0;
 const mpResults = {
-  pose: {},
-  hands: {},
+  Body: {},
+  Hands: {},
 }
 let modelsReady = false;
 
 function onResults(results) {
-  mpResults.body = results.poseWorldLandmarks;
+  mpResults.Body = results.poseWorldLandmarks;
 }
 
 const pose = new Pose({locateFile: (file) => {
@@ -39,10 +39,9 @@ pose.setOptions({
 pose.onResults(onResults);
 
 function onResultsHands(results) {
-  mpResults.hands = {
-    landmarks: results.multiHandWorldLandmarks,
-    multiHandedness: results.multiHandedness
-    //index i label
+  mpResults.Hands = {
+    Landmarks: results.multiHandWorldLandmarks,
+    MultiHandedness: results.multiHandedness
   };
 }
 
@@ -80,7 +79,7 @@ const camera = new Camera(videoElement, {
         timecounter = 0;
     }
   },
-  width: 640,
+  width: 720,
   height: 480
 });
 // canvasElement.width = 640;
