@@ -8,144 +8,74 @@
 const sendBuffer = window.dgram.sendBuffer;
 
 const videoElement = document.getElementsByClassName('input_video')[0];
-const canvasElement = document.getElementsByClassName('output_canvas')[0];
-const canvasCtx = canvasElement.getContext('2d');
+//const canvasElement = document.getElementsByClassName('output_canvas')[0];
+const fpsElement = document.getElementsByClassName('fps')[0];
+//const canvasCtx = canvasElement.getContext('2d');
 let time = Date.now();
 let prevTime = Date.now();
 let frames = 0;
 let timecounter = 0;
-let notSentResults = true;
+const mpResults = {
+  pose: {},
+  hands: {},
+}
+let modelsReady = false;
 
 function onResults(results) {
-  if (notSentResults) {
-    console.log(results);
-    notSentResults = false;
-  }
-  results.faceLandmarks && sendBuffer({
-    Face: {
-      TopLeft: results.faceLandmarks[21],
-      TopRight: results.faceLandmarks[251],
-      BottomRight: results.faceLandmarks[397],
-      BottomLeft: results.faceLandmarks[172]
-    },
-    Body: results.za,
-    HandL: results.leftHandLandmarks ?? null,
-    HandR: results.rightHandLandmarks ?? null,
-  });
-  
-  canvasCtx.save();
-  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(
-      results.image, 0, 0, canvasElement.width, canvasElement.height);
-
-canvasCtx.lineWidth = 5;
-  // if (results.poseLandmarks) {
-  //   if (results.rightHandLandmarks) {
-  //     canvasCtx.strokeStyle = 'white';
-  //     connect(canvasCtx, [[
-  //               results.poseLandmarks[POSE_LANDMARKS.RIGHT_ELBOW],
-  //               results.rightHandLandmarks[0]
-  //             ]]);
-  //   }
-  //   if (results.leftHandLandmarks) {
-  //     canvasCtx.strokeStyle = 'white';
-  //     connect(canvasCtx, [[
-  //               results.poseLandmarks[POSE_LANDMARKS.LEFT_ELBOW],
-  //               results.leftHandLandmarks[0]
-  //             ]]);
-  //   }
-  // }
-
-  // Pose...
-  if(results.poseLandmarks) {
-  drawConnectors(
-      canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
-      {color: 'white'});
-  drawLandmarks(
-      canvasCtx,
-      Object.values(POSE_LANDMARKS_LEFT)
-          .map(index => results.poseLandmarks[index]),
-      {visibilityMin: 0.65, color: 'white', fillColor: 'rgb(255,138,0)'});
-  drawLandmarks(
-      canvasCtx,
-      Object.values(POSE_LANDMARKS_RIGHT)
-          .map(index => results.poseLandmarks[index]),
-      {visibilityMin: 0.65, color: 'white', fillColor: 'rgb(0,217,231)'});
-  }
-
-  // Hands...
-  drawConnectors(
-      canvasCtx, results.rightHandLandmarks, HAND_CONNECTIONS,
-      {color: 'white'});
-  drawLandmarks(canvasCtx, results.rightHandLandmarks, {
-    color: 'white',
-    fillColor: 'rgb(0,217,231)',
-    lineWidth: 2,
-    radius: (data) => {
-      return lerp(data.from.z, -0.15, .1, 10, 1);
-    }
-  });
-  drawConnectors(
-      canvasCtx, results.leftHandLandmarks, HAND_CONNECTIONS,
-      {color: 'white'});
-  drawLandmarks(canvasCtx, results.leftHandLandmarks, {
-    color: 'white',
-    fillColor: 'rgb(255,138,0)',
-    lineWidth: 2,
-    radius: (data) => {
-      return lerp(data.from.z, -0.15, .1, 10, 1);
-    }
-  });
-
-  // Face...
-  drawConnectors(
-      canvasCtx, results.faceLandmarks, FACEMESH_TESSELATION,
-      {color: '#C0C0C070', lineWidth: 1});
-  drawConnectors(
-      canvasCtx, results.faceLandmarks, FACEMESH_RIGHT_EYE,
-      {color: 'rgb(0,217,231)'});
-  drawConnectors(
-      canvasCtx, results.faceLandmarks, FACEMESH_RIGHT_EYEBROW,
-      {color: 'rgb(0,217,231)'});
-  drawConnectors(
-      canvasCtx, results.faceLandmarks, FACEMESH_LEFT_EYE,
-      {color: 'rgb(255,138,0)'});
-  drawConnectors(
-      canvasCtx, results.faceLandmarks, FACEMESH_LEFT_EYEBROW,
-      {color: 'rgb(255,138,0)'});
-  drawConnectors(
-      canvasCtx, results.faceLandmarks, FACEMESH_FACE_OVAL,
-      {color: '#E0E0E0', lineWidth: 5});
-  drawConnectors(
-      canvasCtx, results.faceLandmarks, FACEMESH_LIPS,
-      {color: '#E0E0E0', lineWidth: 5});
-  
-  canvasCtx.restore();
+  mpResults.body = results.poseWorldLandmarks;
 }
 
-const holistic = new Holistic({locateFile: (file) => {
-  return `https://cdn.jsdelivr.net/npm/@mediapipe/holistic@0.5/${file}`;
+const pose = new Pose({locateFile: (file) => {
+  return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
 }});
-holistic.setOptions({
-  modelComplexity: 0,
+pose.setOptions({
+  modelComplexity: 1,
   smoothLandmarks: true,
   enableSegmentation: false,
-  smoothSegmentation: false,
-  refineFaceLandmarks: false,
+  smoothSegmentation: true,
   minDetectionConfidence: 0.5,
   minTrackingConfidence: 0.5
 });
-holistic.onResults(onResults);
+pose.onResults(onResults);
+
+function onResultsHands(results) {
+  mpResults.hands = {
+    landmarks: results.multiHandWorldLandmarks,
+    multiHandedness: results.multiHandedness
+    //index i label
+  };
+}
+
+const hands = new Hands({locateFile: (file) => {
+  return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+}});
+hands.setOptions({
+  maxNumHands: 2,
+  modelComplexity: 0,
+  minDetectionConfidence: 0.5,
+  minTrackingConfidence: 0.5
+});
+hands.onResults(onResultsHands);
+
+let awaiters = []
 
 const camera = new Camera(videoElement, {
   onFrame: async () => {
-    await holistic.send({image: videoElement});
+    if(modelsReady) {
+      awaiters = [pose.send({image: videoElement}), hands.send({image: videoElement})];
+      await Promise.all(awaiters);
+      sendBuffer(mpResults);
+    } else {
+      await hands.send({image: videoElement});
+      await pose.send({image: videoElement});
+      modelsReady = true;
+    }
     prevTime = time;
     time = Date.now();
     timecounter += time - prevTime;
     frames += 1;
     if(timecounter >= 1000) {
-        console.log(`frames rendered: ${frames}`);
+        fpsElement.value = frames;
         frames = 0;
         timecounter = 0;
     }
@@ -153,6 +83,6 @@ const camera = new Camera(videoElement, {
   width: 640,
   height: 480
 });
-canvasElement.width = 640;
-canvasElement.height = 480;
+// canvasElement.width = 640;
+// canvasElement.height = 480;
 camera.start();

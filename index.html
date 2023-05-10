@@ -10,12 +10,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic@0.5/holistic.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
   </head>
   <body>
     <div class="container">
-        <canvas class="output_canvas"></canvas>
-        <video class="input_video"></video>
-      </div>
+      <input class="fps" value="0" />
+      <!--canvas class="output_canvas"></canvas-->
+      <video class="input_video"></video>
+    </div>
 
     <!-- You can also require other files to run in this process -->
     <script nodeIntegration src="./renderer.js"></script>
